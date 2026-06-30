@@ -13,6 +13,7 @@ import re
 import asyncio
 import logging
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 import requests
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -33,10 +34,9 @@ DISCORD_ROLE_ID = os.environ.get("DISCORD_ROLE_ID", "")  # optional: role to pin
 KEYWORD_PATTERN = re.compile(rf"\b{re.escape(KEYWORD)}\b", re.IGNORECASE)
 
 client = TelegramClient(
-    "session" if not SESSION_STRING else None,
+    StringSession(SESSION_STRING) if SESSION_STRING else "session",
     API_ID,
     API_HASH,
-    session=SESSION_STRING or "session",
 )
 
 
