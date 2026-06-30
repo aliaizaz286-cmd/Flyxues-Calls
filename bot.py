@@ -40,11 +40,9 @@ client = TelegramClient(
 )
 
 
-def send_to_discord(author: str, text: str, link: str = None):
+def send_to_discord(author: str, text: str):
     role_ping = f"<@&{DISCORD_ROLE_ID}> " if DISCORD_ROLE_ID else ""
     content = f"{role_ping}**{author}**\n{text}"
-    if link:
-        content += f"\n{link}"
 
     payload = {"content": content[:1900]}
     if DISCORD_ROLE_ID:
@@ -72,9 +70,8 @@ async def handler(event):
     if not KEYWORD_PATTERN.search(text):
         return
 
-    link = f"https://t.me/{CHANNEL_USERNAME}/{msg.id}"
     log.info(f"Match found: {text[:80]}")
-    send_to_discord(CHANNEL_USERNAME, text, link=link)
+    send_to_discord(CHANNEL_USERNAME, text)
 
 
 async def main():
