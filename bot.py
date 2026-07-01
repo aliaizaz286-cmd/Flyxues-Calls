@@ -29,6 +29,8 @@ KEYWORD = os.environ.get("KEYWORD", "discord")        # exact word to match
 
 DISCORD_WEBHOOK_URL = os.environ["DISCORD_WEBHOOK_URL"]
 DISCORD_ROLE_ID = os.environ.get("DISCORD_ROLE_ID", "")  # optional: role to ping
+DISCORD_WEBHOOK_NAME = os.environ.get("DISCORD_WEBHOOK_NAME", "Flyxes Call")
+DISCORD_WEBHOOK_AVATAR = os.environ.get("DISCORD_WEBHOOK_AVATAR", "")  # optional avatar image URL
 
 # Build a regex for EXACT whole-word match, case-insensitive
 KEYWORD_PATTERN = re.compile(rf"\b{re.escape(KEYWORD)}\b", re.IGNORECASE)
@@ -40,11 +42,16 @@ client = TelegramClient(
 )
 
 
-def send_to_discord(author: str, text: str):
-    role_ping = f"<@&{DISCORD_ROLE_ID}> " if DISCORD_ROLE_ID else ""
-    content = f"{role_ping}**{author}**\n{text}"
+def send_to_discord(text: str):
+    role_ping = f"<@&{DISCORD_ROLE_ID}>\n" if DISCORD_ROLE_ID else ""
+    content = f"{role_ping}{text}"
 
-    payload = {"content": content[:1900]}
+    payload = {
+        "content": content[:1900],
+        "username": DISCORD_WEBHOOK_NAME,
+    }
+    if DISCORD_WEBHOOK_AVATAR:
+        payload["avatar_url"] = DISCORD_WEBHOOK_AVATAR
     if DISCORD_ROLE_ID:
         # Explicitly allow this role to be pinged, even if the role itself
         # has "Allow anyone to mention this role" turned off
@@ -70,8 +77,13 @@ async def handler(event):
     if not KEYWORD_PATTERN.search(text):
         return
 
+    # Strip the trigger keyword from the text before posting
+    clean_text = KEYWORD_PATTERN.sub("", text).strip()
+    # Clean up any leftover blank lines from the removal
+    clean_text = "\n".join(line for line in clean_text.splitlines() if line.strip())
+
     log.info(f"Match found: {text[:80]}")
-    send_to_discord(CHANNEL_USERNAME, text)
+    send_to_discord(clean_text)
 
 
 async def main():
